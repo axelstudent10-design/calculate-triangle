@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrigSolver AI - Triangle Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 text-slate-800">
+
+    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-indigo-600 p-6 text-white text-center">
+            <h1 class="text-3xl font-bold">TrigSolver AI</h1>
+            <p class="opacity-80">Enter 3 values (at least one side) to solve the triangle.</p>
+        </div>
+
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- Sides Input -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold border-b pb-2">Sides</h2>
+                    <div>
+                        <label class="block text-sm font-medium">Side a</label>
+                        <input type="number" id="sideA" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Side b</label>
+                        <input type="number" id="sideB" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Side c</label>
+                        <input type="number" id="sideC" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Angles Input -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold border-b pb-2">Angles (Degrees)</h2>
+                    <div>
+                        <label class="block text-sm font-medium">Angle A (°)</label>
+                        <input type="number" id="angleA" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Angle B (°)</label>
+                        <input type="number" id="angleB" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Angle C (°)</label>
+                        <input type="number" id="angleC" step="any" placeholder="0.00" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex gap-4 mb-8">
+                <button onclick="solveTriangle()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-md">Calculate</button>
+                <button onclick="resetFields()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-lg transition">Reset</button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultBox" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <h2 class="text-xl font-bold text-indigo-900 mb-4">Results</h2>
+                    <div class="grid grid-cols-2 gap-4 text-lg" id="resultsContent">
+                        <!-- JS injects here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorBox" class="hidden mt-4 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-center"></div>
+        </div>
+    </div>
+
+    <script>
+        const toRad = (deg) => deg * (Math.PI / 180);
+        const toDeg = (rad) => rad * (180 / Math.PI);
+
+        function resetFields() {
+            ['sideA','sideB','sideC','angleA','angleB','angleC'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('errorBox').classList.add('hidden');
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('errorBox');
+            err.innerText = msg;
+            err.classList.remove('hidden');
+            document.getElementById('resultBox').classList.add('hidden');
+        }
+
+        function solveTriangle() {
+            let a = parseFloat(document.getElementById('sideA').value);
+            let b = parseFloat(document.getElementById('sideB').value);
+            let c = parseFloat(document.getElementById('sideC').value);
+            let A = parseFloat(document.getElementById('angleA').value);
+            let B = parseFloat(document.getElementById('angleB').value);
+            let C = parseFloat(document.getElementById('angleC').value);
+
+            document.getElementById('errorBox').classList.add('hidden');
+            
+            let inputs = [a, b, c, A, B, C].filter(x => !isNaN(x));
+            let sideCount = [a, b, c].filter(x => !isNaN(x)).length;
+
+            if (inputs.length !== 3) return showError("Please provide exactly 3 values.");
+            if (sideCount === 0) return showError("At least one side must be provided (AAA is not solvable).");
+
+            // Logic Switch based on input combinations
+            try {
+                // SSS (Side-Side-Side)
+                if (sideCount === 3) {
+                    if (a + b <= c || a + c <= b || b + c <= a) throw "Invalid sides: Doesn't form a triangle.";
+                    A = toDeg(Math.acos((b*b + c*c - a*a) / (2*b*c)));
+                    B = toDeg(Math.acos((a*a + c*c - b*b) / (2*a*c)));
+                    C = 180 - A - B;
+                }
+                // ASA or AAS
+                else if ([A, B, C].filter(x => !isNaN(x)).length === 2) {
+                    let knownAngles = [A, B, C].filter(x => !isNaN(x));
+                    if (knownAngles[0] + knownAngles[1] >= 180) throw "Angles must sum to less than 180°";
+                    
+                    if (isNaN(A)) A = 180 - B - C;
+                    if (isNaN(B)) B = 180 - A - C;
+                    if (isNaN(C)) C = 180 - A - B;
+
+                    let side = !isNaN(a) ? a : (!isNaN(b) ? b : c);
+                    let sAngle = !isNaN(a) ? A : (!isNaN(b) ? B : C);
+
+                    a = side * Math.sin(toRad(A)) / Math.sin(toRad(sAngle));
+                    b = side * Math.sin(toRad(B)) / Math.sin(toRad(sAngle));
+                    c = side * Math.sin(toRad(C)) / Math.sin(toRad(sAngle));
+                }
+                // SAS
+                else if (sideCount === 2) {
+                    // Check if the angle is between the two sides
+                    if (!isNaN(a) && !isNaN(b) && !isNaN(C)) {
+                        c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(toRad(C)));
+                        A = toDeg(Math.asin(a * Math.sin(toRad(C)) / c));
+                        B = 180 - A - C;
+                    } else if (!isNaN(a) && !isNaN(c) && !isNaN(B)) {
+                        b = Math.sqrt(a*a + c*c - 2*a*c*Math.cos(toRad(B)));
+                        A = toDeg(Math.asin(a * Math.sin(toRad(B)) / b));
+                        C = 180 - A - B;
+                    } else if (!isNaN(b) && !isNaN(c) && !isNaN(A)) {
+                        a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(toRad(A)));
+                        B = toDeg(Math.asin(b * Math.sin(toRad(A)) / a));
+                        C = 180 - A - B;
+                    } else {
+                        // SSA Case (The "Ambiguous Case") - Simplified for this tool
+                        throw "SSA combination is ambiguous. Please provide SAS or SSS.";
+                    }
+                }
+
+                displayResults(a, b, c, A, B, C);
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function displayResults(a, b, c, A, B, C) {
+            const container = document.getElementById('resultsContent');
+            const box = document.getElementById('resultBox');
+            
+            container.innerHTML = `
+                <div class="p-2"><strong>Side a:</strong> ${a.toFixed(2)}</div>
+                <div class="p-2"><strong>Angle A:</strong> ${A.toFixed(2)}°</div>
+                <div class="p-2"><strong>Side b:</strong> ${b.toFixed(2)}</div>
+                <div class="p-2"><strong>Angle B:</strong> ${B.toFixed(2)}°</div>
+                <div class="p-2"><strong>Side c:</strong> ${c.toFixed(2)}</div>
+                <div class="p-2"><strong>Angle C:</strong> ${C.toFixed(2)}°</div>
+            `;
+            box.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
